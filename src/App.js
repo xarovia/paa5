@@ -7,11 +7,20 @@ import image_2 from './assets/img/image-2.png';
 import image_3 from './assets/img/image-3.png';
 import { useLocalStorage } from 'usehooks-ts'
 import initialProducts from "./data";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 function App() {
-  let [cart, setCart] = useLocalStorage('cart', []) 
-  let [products, setProducts] = useState(initialProducts)
+  let [cart, setCart] = useLocalStorage('cart', []);
+  let [query, setQuery] = useState(''); //empty
+  let filteredProducts = useMemo(() => {
+    if (query) {
+      const re = new RegExp(`^${query}`, 'mi')
+      return initialProducts.filter((product) => re.test(product.name))      
+    }
+    else {
+      return initialProducts
+    }
+  }, [query])
   function addToCart(product){
     const isItemExisting = cart.filter((p) => p.id === product.id).length !== 0 ? true : false;    
     if (!isItemExisting) { // adding a new item to cart
@@ -35,16 +44,7 @@ function App() {
         })
       )
     }
-  }
-  function filterSearch(query){   
-    if (query) {
-      const re = new RegExp(`^${query}`, 'mi')
-      setProducts(initialProducts.filter((product) => re.test(product.name)))
-    }
-    else {
-      setProducts(initialProducts)
-    }
-  }
+  }  
   useEffect(() => {    
     if (cart.length === 0 && document.getElementById('cart').classList.contains('active')) {
         document.getElementById('cart').classList.toggle('active')
@@ -71,11 +71,11 @@ function App() {
         <div className="flex justify-end items-center space-x-6">
           <form className="relative">
             <i className="fa-solid fa-magnifying-glass absolute top-[30%] left-[6%] text-[grey]"></i>
-            <input type={'search'} placeholder='Search' onChange={(e) => filterSearch(e.target.value)} name="search_name" className="pl-10 py-2 rounded-full placeholder:font-[Peloric] text-[black]" />
+            <input type={'search'} placeholder='Search' onChange={(e) => setQuery(e.target.value)} name="search_name" className="pl-10 py-2 rounded-full placeholder:font-[Peloric] text-[black]" />
           </form>          
         </div>
         <div className="grid grid-cols-3 w-[80%] gap-6 mx-auto text-center font-[SweetSansPro] font-medium mt-10 mb-32">
-          {products.map(product => {
+          {filteredProducts.map(product => {
             return (
               <div key={product.id} className="px-4 py-2 space-y-2 bg-white rounded-3xl">
                   <img src={product.imgPath} alt="" className="h-[300px] border-b-1 border-black mx-auto"/>
